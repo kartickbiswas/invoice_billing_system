@@ -1,0 +1,457 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .form-section {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: #333;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    select,
+    textarea {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-sizing: border-box;
+        font-size: 14px;
+    }
+
+    textarea {
+        resize: vertical;
+        min-height: 80px;
+    }
+
+    button {
+        background: #27ae60;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: bold;
+    }
+
+    button:hover {
+        background: #229954;
+    }
+
+    .delete-btn {
+        background: #e74c3c;
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+
+    .delete-btn:hover {
+        background: #c0392b;
+    }
+
+    .view-btn {
+        background: #3498db;
+        padding: 6px 12px;
+        font-size: 12px;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .view-btn:hover {
+        background: #2980b9;
+    }
+
+    .table-section {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+    }
+
+    table thead {
+        background: #34495e;
+        color: white;
+    }
+
+    table th,
+    table td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+
+    table tbody tr:hover {
+        background: #f5f5f5;
+    }
+
+    table tbody tr:nth-child(even) {
+        background: #f9f9f9;
+    }
+
+    .no-invoices {
+        text-align: center;
+        color: #999;
+        padding: 30px;
+        font-size: 16px;
+    }
+
+    h2 {
+        color: #2c3e50;
+        border-bottom: 2px solid #1abc9c;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+
+    .form-row.full {
+        grid-template-columns: 1fr;
+    }
+
+    .alert {
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 4px;
+    }
+
+    .alert-success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .status-pending {
+        background: #fff3cd;
+        color: #856404;
+        padding: 4px 8px;
+        border-radius: 3px;
+        font-weight: bold;
+    }
+
+    .status-completed {
+        background: #d4edda;
+        color: #155724;
+        padding: 4px 8px;
+        border-radius: 3px;
+        font-weight: bold;
+    }
+
+    .status-cancelled {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 4px 8px;
+        border-radius: 3px;
+        font-weight: bold;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+    }
+
+    .items-section {
+        background: #f9f9f9;
+        padding: 15px;
+        border-radius: 4px;
+        margin-top: 20px;
+    }
+
+    .add-item-btn {
+        background: #3498db;
+        padding: 8px 15px;
+        font-size: 13px;
+    }
+
+    .add-item-btn:hover {
+        background: #2980b9;
+    }
+
+    .item-row {
+        background: white;
+        padding: 10px;
+        margin-bottom: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr 0.5fr;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .summary {
+        background: #f0f0f0;
+        padding: 15px;
+        border-radius: 4px;
+        margin-top: 15px;
+        text-align: right;
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 8px;
+        font-size: 14px;
+    }
+
+    .summary-row.total {
+        font-weight: bold;
+        font-size: 16px;
+        border-top: 2px solid #333;
+        padding-top: 8px;
+        color: #2c3e50;
+    }
+</style>
+
+<h2>Invoice Management</h2>
+
+{% if message %}
+    <div class="alert alert-success">{{ message }}</div>
+{% endif %}
+
+<!-- Create New Invoice Form -->
+<div class="form-section">
+    <h3>Create New Invoice</h3>
+    <form method="POST" action="/invoices">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="invoice_number">Invoice Number *</label>
+                <input type="text" id="invoice_number" name="invoice_number" placeholder="INV-001" required>
+            </div>
+            <div class="form-group">
+                <label for="customer_id">Customer *</label>
+                <select id="customer_id" name="customer_id" required>
+                    <option value="">-- Select Customer --</option>
+                    {% for customer in customers %}
+                        <option value="{{ customer.id }}">{{ customer.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="status">Status</label>
+                <select id="status" name="status">
+                    <option value="Pending">Pending</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Cancelled">Cancelled</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="date_created">Date</label>
+                <input type="date" id="date_created" name="date_created">
+            </div>
+        </div>
+
+        <div class="items-section">
+            <h4>Invoice Items</h4>
+            <div id="items-container">
+                <div class="item-row">
+                    <div>
+                        <label>Product</label>
+                        <select name="product_id[]" class="product-select" required>
+                            <option value="">-- Select Product --</option>
+                            {% for product in products %}
+                                <option value="{{ product.id }}" data-price="{{ product.price }}" data-tax="{{ product.tax_percent }}">{{ product.name }} - ₹{{ "%.2f"|format(product.price) }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label>Quantity</label>
+                        <input type="number" name="quantity[]" class="quantity-input" value="1" min="1" required>
+                    </div>
+                    <div>
+                        <label>Price</label>
+                        <input type="number" name="price[]" class="price-input" step="0.01" readonly>
+                    </div>
+                    <div>
+                        <label>Tax %</label>
+                        <input type="number" name="tax_percent[]" class="tax-input" step="0.01" readonly>
+                    </div>
+                    <div>
+                        <button type="button" class="delete-btn" onclick="removeItem(this)">Remove</button>
+                    </div>
+                </div>
+            </div>
+            <button type="button" class="add-item-btn" onclick="addItem()">+ Add Item</button>
+        </div>
+
+        <div class="summary">
+            <div class="summary-row">
+                <span>Subtotal: </span>
+                <span id="subtotal">₹0.00</span>
+            </div>
+            <div class="summary-row">
+                <span>Tax Amount: </span>
+                <span id="tax-total">₹0.00</span>
+            </div>
+            <div class="summary-row total">
+                <span>Total Amount: </span>
+                <span id="total-amount">₹0.00</span>
+            </div>
+        </div>
+
+        <button type="submit" style="margin-top: 20px;">Create Invoice</button>
+    </form>
+</div>
+
+<!-- All Invoices Table -->
+<div class="table-section">
+    <h3>All Invoices</h3>
+    
+    {% if invoices %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Invoice #</th>
+                    <th>Customer</th>
+                    <th>Date</th>
+                    <th>Total Amount</th>
+                    <th>Tax Amount</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for invoice in invoices %}
+                <tr>
+                    <td><strong>{{ invoice.invoice_number }}</strong></td>
+                    <td>{{ invoice.customer.name }}</td>
+                    <td>{{ invoice.date_created.strftime('%m/%d/%Y') if invoice.date_created else '-' }}</td>
+                    <td>₹{{ "%.2f"|format(invoice.total_amount) }}</td>
+                    <td>₹{{ "%.2f"|format(invoice.tax_amount) }}</td>
+                    <td>
+                        {% if invoice.status == 'Pending' %}
+                            <span class="status-pending">{{ invoice.status }}</span>
+                        {% elif invoice.status == 'Completed' %}
+                            <span class="status-completed">{{ invoice.status }}</span>
+                        {% else %}
+                            <span class="status-cancelled">{{ invoice.status }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <a href="/invoices/{{ invoice.id }}/print" class="view-btn" target="_blank">Print</a>
+                            <form method="POST" action="/invoices/{{ invoice.id }}/delete" style="display:inline;">
+                                <button type="submit" class="delete-btn" onclick="return confirm('Are you sure you want to delete this invoice?')">Delete</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="no-invoices">
+            No invoices found. Create a new invoice using the form above.
+        </div>
+    {% endif %}
+</div>
+
+<script>
+    function addItem() {
+        const container = document.getElementById('items-container');
+        const newRow = document.createElement('div');
+        newRow.className = 'item-row';
+        
+        // Clone the first item row to maintain product options
+        const firstRow = document.querySelector('.item-row');
+        const selectHTML = firstRow.querySelector('select').outerHTML;
+        
+        newRow.innerHTML = `
+            <div>
+                ${selectHTML}
+            </div>
+            <div>
+                <input type="number" name="quantity[]" class="quantity-input" value="1" min="1" required>
+            </div>
+            <div>
+                <input type="number" name="price[]" class="price-input" step="0.01" readonly>
+            </div>
+            <div>
+                <input type="number" name="tax_percent[]" class="tax-input" step="0.01" readonly>
+            </div>
+            <div>
+                <button type="button" class="delete-btn" onclick="removeItem(this)">Remove</button>
+            </div>
+        `;
+        container.appendChild(newRow);
+        attachEventListeners(newRow);
+    }
+
+    function removeItem(button) {
+        button.closest('.item-row').remove();
+        calculateTotals();
+    }
+
+    function attachEventListeners(row) {
+        const select = row.querySelector('.product-select');
+        const quantity = row.querySelector('.quantity-input');
+        
+        select.addEventListener('change', calculateTotals);
+        quantity.addEventListener('input', calculateTotals);
+    }
+
+    function calculateTotals() {
+        let subtotal = 0;
+        let totalTax = 0;
+        
+        document.querySelectorAll('.item-row').forEach(row => {
+            const select = row.querySelector('.product-select');
+            const quantity = parseFloat(row.querySelector('.quantity-input').value) || 0;
+            const priceInput = row.querySelector('.price-input');
+            const taxInput = row.querySelector('.tax-input');
+            
+            if (select.value) {
+                const option = select.querySelector(`option[value="${select.value}"]`);
+                const price = parseFloat(option.dataset.price);
+                const taxPercent = parseFloat(option.dataset.tax);
+                
+                priceInput.value = price.toFixed(2);
+                taxInput.value = taxPercent.toFixed(2);
+                
+                const itemTotal = price * quantity;
+                const itemTax = itemTotal * (taxPercent / 100);
+                
+                subtotal += itemTotal;
+                totalTax += itemTax;
+            }
+        });
+        
+        document.getElementById('subtotal').textContent = '$' + subtotal.toFixed(2);
+        document.getElementById('tax-total').textContent = '$' + totalTax.toFixed(2);
+        document.getElementById('total-amount').textContent = '$' + (subtotal + totalTax).toFixed(2);
+    }
+
+    // Attach event listeners to existing item rows
+    document.querySelectorAll('.item-row').forEach(row => {
+        attachEventListeners(row);
+    });
+</script>
+
+{% endblock %}

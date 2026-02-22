@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Invoice - {{ invoice.invoice_number }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: white;
+        }
+
+        .invoice-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border: 1px solid #ddd;
+        }
+
+        .invoice-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 20px;
+        }
+
+        .company-info h1 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 28px;
+        }
+
+        .company-info p {
+            margin: 5px 0;
+            color: #666;
+            font-size: 12px;
+        }
+
+        .invoice-number {
+            text-align: right;
+        }
+
+        .invoice-number h2 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 24px;
+        }
+
+        .invoice-number p {
+            margin: 5px 0;
+            color: #666;
+            font-size: 12px;
+        }
+
+        .invoice-details {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+
+        .detail-block {
+            flex: 1;
+        }
+
+        .detail-block h3 {
+            margin: 0 0 10px 0;
+            color: #2c3e50;
+            font-size: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .detail-block p {
+            margin: 5px 0;
+            color: #333;
+            font-size: 13px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+
+        table thead {
+            background: #34495e;
+            color: white;
+        }
+
+        table th {
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+            font-size: 13px;
+        }
+
+        table td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            font-size: 13px;
+        }
+
+        table tbody tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .summary-section {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 30px;
+        }
+
+        .summary {
+            width: 300px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #ddd;
+            font-size: 13px;
+        }
+
+        .summary-row.total {
+            border-bottom: 2px solid #333;
+            font-weight: bold;
+            font-size: 15px;
+            padding: 12px 0;
+            color: #2c3e50;
+        }
+
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            text-align: center;
+            font-size: 11px;
+            color: #999;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-cancelled {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+            }
+
+            .invoice-container {
+                border: none;
+                box-shadow: none;
+                max-width: 100%;
+            }
+
+            .no-print {
+                display: none;
+            }
+        }
+
+        .print-btn {
+            background: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .print-btn:hover {
+            background: #2980b9;
+        }
+    </style>
+</head>
+<body>
+
+<div class="no-print" style="text-align: center;">
+    <button class="print-btn" onclick="window.print()">🖨️ Print Invoice</button>
+</div>
+
+<div class="invoice-container">
+    <!-- Header -->
+    <div class="invoice-header">
+        <div class="company-info">
+            <h1>{{ company.company_name }}</h1>
+            <p>{{ company.email }}</p>
+            <p>{{ company.phone }}</p>
+            <p>{{ company.address }}</p>
+            <p>GST: {{ company.gst_number }}</p>
+        </div>
+        <div class="invoice-number">
+            <h2>INVOICE</h2>
+            <p><strong>Invoice #:</strong> {{ invoice.invoice_number }}</p>
+            <p><strong>Date:</strong> {{ invoice.date_created.strftime('%m/%d/%Y') if invoice.date_created else '-' }}</p>
+            <p><strong>Status:</strong></p>
+            {% if invoice.status == 'Pending' %}
+                <span class="status-badge status-pending">{{ invoice.status }}</span>
+            {% elif invoice.status == 'Completed' %}
+                <span class="status-badge status-completed">{{ invoice.status }}</span>
+            {% else %}
+                <span class="status-badge status-cancelled">{{ invoice.status }}</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Details -->
+    <div class="invoice-details">
+        <div class="detail-block">
+            <h3>Bill To:</h3>
+            <p><strong>{{ invoice.customer.name }}</strong></p>
+            <p>{{ invoice.customer.email or '-' }}</p>
+            <p>{{ invoice.customer.phone or '-' }}</p>
+            <p>{{ invoice.customer.address or '-' }}</p>
+            {% if invoice.customer.gst_number %}
+                <p>GST: {{ invoice.customer.gst_number }}</p>
+            {% endif %}
+        </div>
+        <div class="detail-block">
+            <h3>Invoice Details:</h3>
+            <p><strong>Invoice Number:</strong> {{ invoice.invoice_number }}</p>
+            <p><strong>Invoice Date:</strong> {{ invoice.date_created.strftime('%m/%d/%Y') if invoice.date_created else '-' }}</p>
+            <p><strong>Due Date:</strong> -</p>
+        </div>
+    </div>
+
+    <!-- Items Table -->
+    <table>
+        <thead>
+            <tr>
+                <th>Item Description</th>
+                <th class="text-right">Quantity</th>
+                <th class="text-right">Unit Price</th>
+                <th class="text-right">Tax %</th>
+                <th class="text-right">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in invoice.items %}
+            <tr>
+                <td>{{ item.product.name }}</td>
+                <td class="text-right">{{ item.quantity }}</td>
+                <td class="text-right">₹{{ "%.2f"|format(item.price) }}</td>
+                <td class="text-right">{{ item.tax_percent }}%</td>
+                <td class="text-right">₹{{ "%.2f"|format(item.price * item.quantity) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Summary -->
+    <div class="summary-section">
+        <div class="summary">
+            <div class="summary-row">
+                <span>Subtotal:</span>
+                <span>₹{{ "%.2f"|format(invoice.total_amount - invoice.tax_amount) }}</span>
+            </div>
+            <div class="summary-row">
+                <span>Tax Amount:</span>
+                <span>₹{{ "%.2f"|format(invoice.tax_amount) }}</span>
+            </div>
+            <div class="summary-row total">
+                <span>Grand Total:</span>
+                <span>₹{{ "%.2f"|format(invoice.total_amount) }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <p>Thank you for your business!</p>
+        <p>This is a computer-generated invoice. No signature required.</p>
+    </div>
+</div>
+
+</body>
+</html>
